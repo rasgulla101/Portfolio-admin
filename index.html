@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Portfolio CMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #161616;
+            --text-main: #f0f0f0;
+            --text-muted: #888888;
+            --border-color: #333;
+            --pill-border: #444;
+            --input-bg: #1e1e1e;
+            --transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f5f4ef;
+            --text-main: #121212;
+            --text-muted: #666666;
+            --border-color: #cccccc;
+            --pill-border: #bbbbbb;
+            --input-bg: #ebeae3;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color var(--transition), color var(--transition);
+            overflow-x: hidden;
+            font-weight: 300;
+        }
+
+        ul { list-style: none; }
+        a { text-decoration: none; color: inherit; }
+
+        /* --- Theme Switch --- */
+        .theme-switch-wrapper { position: fixed; top: 30px; right: 40px; z-index: 1000; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 50px; }
+        .theme-switch input { display: none; }
+        .slider {
+            background-color: transparent; border: 1px solid var(--text-main);
+            bottom: 0; left: 0; position: absolute; right: 0; top: 0;
+            transition: .4s; border-radius: 34px; cursor: pointer;
+        }
+        .slider:before {
+            background-color: var(--text-main); bottom: 3px; content: ""; height: 16px;
+            left: 4px; position: absolute; transition: .4s; width: 16px; border-radius: 50%;
+        }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* --- Global Typography --- */
+        h1.auth-title { font-size: 2.5rem; font-weight: 200; letter-spacing: 2px; margin-bottom: 10px; }
+        p.auth-subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 40px; }
+        .section-header {
+            font-size: 1.05rem; font-weight: 300; letter-spacing: 1px; margin-bottom: 40px;
+            padding-bottom: 15px; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; text-transform: uppercase; width: 100%;
+        }
+
+        /* --- Forms & Inputs --- */
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-size: 0.8rem; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; }
+        
+        .admin-input, .admin-textarea, .admin-select {
+            width: 100%; padding: 15px; background: var(--input-bg);
+            border: 1px solid var(--border-color); color: var(--text-main);
+            font-family: inherit; font-size: 0.95rem; font-weight: 300;
+            transition: border-color 0.3s ease; border-radius: 0;
+        }
+        .admin-textarea { resize: vertical; min-height: 120px; }
+        .admin-input:focus, .admin-textarea:focus, .admin-select:focus { outline: none; border-color: var(--text-main); }
+        
+        .admin-btn {
+            padding: 15px 30px; background: var(--text-main); color: var(--bg-color);
+            border: 1px solid var(--text-main); cursor: pointer; font-family: inherit;
+            text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;
+            transition: all 0.3s ease; width: 100%; font-weight: 500;
+        }
+        .admin-btn:hover { background: transparent; color: var(--text-main); }
+        
+        .admin-btn-outline {
+            background: transparent; color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .admin-btn-outline:hover { border-color: var(--text-main); }
+
+        /* --- Auth Flow (Login & OTP) --- */
+        .auth-layout { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .auth-box { width: 100%; max-width: 400px; }
+        #view-otp { display: none; }
+
+        /* --- Dashboard Layout --- */
+        #view-dashboard-layout { display: none; min-height: 100vh; }
+        
+        .sidebar {
+            width: 250px; position: fixed; height: 100vh; padding: 85px 0 40px 40px;
+            display: flex; flex-direction: column; z-index: 100; border-right: 1px solid var(--border-color);
+        }
+        .nav-links { display: flex; flex-direction: column; align-items: flex-start; flex-grow: 1; }
+        .nav-links li {
+            margin-bottom: 30px; font-size: 0.8rem; letter-spacing: 2px;
+            color: var(--text-muted); cursor: pointer; transition: color 0.3s;
+            position: relative; text-transform: uppercase;
+        }
+        .nav-links li:hover { color: var(--text-main); }
+        .nav-links li.active { color: var(--text-main); }
+        .nav-links li.active::before {
+            content: ''; position: absolute; top: -10px; left: 0; width: 100%;
+            height: 1px; background-color: var(--text-main);
+        }
+        .logout-btn {
+            font-size: 0.8rem; letter-spacing: 2px; color: #ff4d4d; cursor: pointer;
+            text-transform: uppercase; margin-top: auto;
+        }
+
+        .main-content { margin-left: 250px; flex-grow: 1; padding: 85px 8vw 100px 6vw; position: relative; }
+        .admin-view { display: none; animation: fadeIn 0.5s ease forwards; }
+        .admin-view.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Dashboard Cards --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 60px; }
+        .stat-card {
+            padding: 30px; border: 1px solid var(--border-color); background: var(--input-bg);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .stat-card h3 { font-size: 0.8rem; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 20px; font-weight: 300; }
+        .stat-card .value { font-size: 3rem; font-weight: 200; }
+
+        /* --- Split Form Layout --- */
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            #view-dashboard-layout { flex-direction: column; }
+            .sidebar { position: static; width: 100%; height: auto; padding: 30px 25px; border-right: none; border-bottom: 1px solid var(--border-color); }
+            .nav-links { flex-direction: row; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+            .nav-links li { margin-bottom: 0; font-size: 0.75rem; }
+            .nav-links li.active::before { display: none; }
+            .main-content { margin-left: 0; padding: 40px 25px; }
+            .form-row-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider"></div>
+        </label>
+    </div>
+
+    <div class="auth-layout" id="auth-layout">
+        
+        <div class="auth-box" id="view-login">
+            <h1 class="auth-title">ADMIN</h1>
+            <p class="auth-subtitle">Secure access to portfolio content.</p>
+            
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Admin Email</label>
+                    <input type="email" class="admin-input" placeholder="shubham.dubey@gmail.com" required>
+                </div>
+                <button type="submit" class="admin-btn">Send OTP</button>
+            </form>
+        </div>
+
+        <div class="auth-box" id="view-otp">
+            <h1 class="auth-title">VERIFY</h1>
+            <p class="auth-subtitle">Enter the 6-digit code sent to your email.</p>
+            
+            <form onsubmit="handleOTP(event)">
+                <div class="form-group">
+                    <label>Security Code</label>
+                    <input type="text" class="admin-input" placeholder="• • • • • •" maxlength="6" required style="text-align: center; font-size: 1.5rem; letter-spacing: 10px;">
+                </div>
+                <button type="submit" class="admin-btn">Verify & Login</button>
+                <button type="button" class="admin-btn admin-btn-outline" style="margin-top: 15px;" onclick="backToLogin()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="view-dashboard-layout">
+        
+        <nav class="sidebar">
+            <ul class="nav-links">
+                <li class="admin-nav-item active" onclick="navigateAdmin('home', this)">Overview</li>
+                <li class="admin-nav-item" onclick="navigateAdmin('about', this)">About</li>
+                <li class="admin-nav-item" onclick="navigateAdmin('skills', this)">Skills</li>
+                <li class="admin-nav-item" onclick="navigateAdmin('works', this)">Works</li>
+                <li class="admin-nav-item" onclick="navigateAdmin('blogs', this)">Blogs</li>
+            </ul>
+            <div class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+        </nav>
+
+        <main class="main-content">
+            
+            <div id="admin-home" class="admin-view active">
+                <div class="section-header"><span>Dashboard Overview</span></div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>TOTAL PROJECTS</h3>
+                        <div class="value">02</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>PUBLISHED BLOGS</h3>
+                        <div class="value">03</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>SKILLS LISTED</h3>
+                        <div class="value">16</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-about" class="admin-view">
+                <div class="section-header"><span>Update About Section</span></div>
+                <form onsubmit="saveData(event, 'About Section Updated!')">
+                    <div class="form-group">
+                        <label>Sub-title (Hero)</label>
+                        <input type="text" class="admin-input" value="Backend Software Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="email" class="admin-input" value="shubham.dubey@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>About Me Content (Paragraphs separated by line breaks)</label>
+                        <textarea class="admin-textarea">I am a backend software developer based in Kolkata, bridging a background in mechanical engineering with a passion for architecting scalable, production-ready systems. Specializing in Node.js, TypeScript, PostgreSQL, and AWS...</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Motivation Content</label>
+                        <textarea class="admin-textarea">My career is currently rooted in advanced backend development, dedicating my energy to mastering modern frameworks like NestJS and Fastify. Beyond code, my long-term vision encompasses continuous personal development...</textarea>
+                    </div>
+                    <button type="submit" class="admin-btn" style="width: auto;">Save Changes</button>
+                </form>
+            </div>
+
+            <div id="admin-skills" class="admin-view">
+                <div class="section-header"><span>Manage Skills</span></div>
+                
+                <div class="form-row-2">
+                    <form onsubmit="saveData(event, 'Skill Added!')" style="border: 1px solid var(--border-color); padding: 30px; background: var(--input-bg);">
+                        <h3 style="margin-bottom: 20px; font-weight: 300;">Add New Skill</h3>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="admin-select">
+                                <option>BACKEND</option>
+                                <option>CLOUD & DATA</option>
+                                <option>TOOLS & OTHERS</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Skill Name</label>
+                            <input type="text" class="admin-input" placeholder="e.g. GraphQL">
+                        </div>
+                        <button type="submit" class="admin-btn">Add Skill</button>
+                    </form>
+
+                    <div style="border: 1px solid var(--border-color); padding: 30px;">
+                        <h3 style="margin-bottom: 20px; font-weight: 300;">Current Backend Skills</h3>
+                        <ul style="color: var(--text-muted); line-height: 2; font-size: 0.9rem;">
+                            <li>Node.js <span style="float:right; cursor:pointer; color:#ff4d4d;">&times;</span></li>
+                            <li>TypeScript <span style="float:right; cursor:pointer; color:#ff4d4d;">&times;</span></li>
+                            <li>NestJS <span style="float:right; cursor:pointer; color:#ff4d4d;">&times;</span></li>
+                            <li>Fastify <span style="float:right; cursor:pointer; color:#ff4d4d;">&times;</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-works" class="admin-view">
+                <div class="section-header"><span>Add / Edit Project</span></div>
+                <form onsubmit="saveData(event, 'Project Saved!')">
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Project Title</label>
+                            <input type="text" class="admin-input" placeholder="e.g. HEALTHCARE BOOKING SYSTEM">
+                        </div>
+                        <div class="form-group">
+                            <label>Subtitle / Tagline</label>
+                            <input type="text" class="admin-input" placeholder="e.g. Production-Ready Backend / Microservices">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label>Tools Used (Comma separated)</label>
+                            <input type="text" class="admin-input" placeholder="TypeScript, NestJS, PostgreSQL, AWS">
+                        </div>
+                        <div class="form-group">
+                            <label>Roles</label>
+                            <input type="text" class="admin-input" placeholder="Backend Developer / Architect">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Thumbnail Image URL</label>
+                        <input type="text" class="admin-input" placeholder="https://images.unsplash.com/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Summary</label>
+                        <textarea class="admin-textarea" placeholder="Detailed description of the project..."></textarea>
+                    </div>
+
+                    <button type="submit" class="admin-btn" style="width: auto;">Publish Project</button>
+                </form>
+            </div>
+
+            <div id="admin-blogs" class="admin-view">
+                <div class="section-header"><span>Draft New Blog Post</span></div>
+                <form onsubmit="saveData(event, 'Blog Published!')">
+                    <div class="form-group">
+                        <label>Blog Title</label>
+                        <input type="text" class="admin-input" placeholder="e.g. Mastering PostgreSQL Indexing">
+                    </div>
+                    <div class="form-group">
+                        <label>Tags (Comma separated)</label>
+                        <input type="text" class="admin-input" placeholder="PostgreSQL, Database, Optimization">
+                    </div>
+                    <div class="form-group">
+                        <label>Short Description (For Card View)</label>
+                        <textarea class="admin-textarea" style="min-height: 80px;" placeholder="A brief summary for the blog list..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Full Content (HTML Supported)</label>
+                        <textarea class="admin-textarea" style="min-height: 250px;" placeholder="<p>Write your full blog post here...</p>"></textarea>
+                    </div>
+
+                    <button type="submit" class="admin-btn" style="width: auto;">Publish Blog</button>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // --- Theme Toggle Logic ---
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'light') toggleSwitch.checked = true;
+        }
+
+        toggleSwitch.addEventListener('change', (e) => {
+            const theme = e.target.checked ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+
+        // --- Authentication Flow ---
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('view-otp').style.display = 'block';
+        }
+
+        function backToLogin() {
+            document.getElementById('view-otp').style.display = 'none';
+            document.getElementById('view-login').style.display = 'block';
+        }
+
+        function handleOTP(e) {
+            e.preventDefault();
+            // Transition from Auth to Dashboard
+            document.getElementById('auth-layout').style.display = 'none';
+            document.getElementById('view-dashboard-layout').style.display = 'flex';
+        }
+
+        function logout() {
+            // Reset to Login
+            document.getElementById('view-dashboard-layout').style.display = 'none';
+            document.getElementById('auth-layout').style.display = 'flex';
+            backToLogin();
+            // Reset forms
+            document.querySelectorAll('form').forEach(f => f.reset());
+        }
+
+        // --- Dashboard Navigation ---
+        const adminViews = {
+            home: document.getElementById('admin-home'),
+            about: document.getElementById('admin-about'),
+            skills: document.getElementById('admin-skills'),
+            works: document.getElementById('admin-works'),
+            blogs: document.getElementById('admin-blogs')
+        };
+        const navLinks = document.querySelectorAll('.admin-nav-item');
+
+        function navigateAdmin(viewId, targetLink) {
+            // Hide all
+            Object.values(adminViews).forEach(v => {
+                v.classList.remove('active');
+            });
+            // Remove active states
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Show targeted
+            adminViews[viewId].classList.add('active');
+            targetLink.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- Form Submission Mock ---
+        function saveData(e, successMessage) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerText;
+            
+            // Mock Saving State
+            btn.innerText = "Saving...";
+            btn.style.opacity = "0.7";
+            
+            setTimeout(() => {
+                btn.innerText = successMessage;
+                btn.style.background = "#4CAF50"; // Green success color
+                btn.style.borderColor = "#4CAF50";
+                btn.style.color = "#fff";
+                btn.style.opacity = "1";
+                
+                // Revert button after 2 seconds
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.style.background = "";
+                    btn.style.borderColor = "";
+                    btn.style.color = "";
+                    if(successMessage.includes('Added') || successMessage.includes('Published')) {
+                        e.target.reset(); // clear form if adding new item
+                    }
+                }, 2000);
+            }, 800);
+        }
+    </script>
+</body>
+</html>
